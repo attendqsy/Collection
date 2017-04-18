@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title></title>
+    <link rel="stylesheet" href="../css/common.css"/>
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .imgBox {
+            transform-style: preserve-3d;
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 200px auto 0;
+        }
+
+        .imgBox img.imgBox_item {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            transition: transform 1s linear;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 1px 1px 1px 1px #222;
+        }
+
+        .imgBox img.imgBox_preshow {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            transition: opacity 1s linear;
+            border-radius: 10px;
+            box-shadow: 0 0 5px 2px #00BCD4;
+            z-index: 9999;
+            cursor: pointer;
+            opacity: 0;
+        }
+
+        @keyframes xzmm {
+            from {
+                transform: perspective(400px) rotateY(0deg) translateZ(200px);
+            }
+            to {
+                transform: perspective(400px) rotateY(360deg) translateZ(200px);
+            }
+        }
+
+        .imgBox img.imgBox_item.sel {
+            box-shadow: 0 0 5px 2px #00BCD4;
+        }
+    </style>
+</head>
+<body>
+<div id="imgBox" class="imgBox">
+    <img class="imgBox_item" src="http://p0.so.qhimgs1.com/bdr/_240_/t0172db3b26c0d1d4ac.jpg"/>
+    <img class="imgBox_item" src="http://p0.so.qhimgs1.com/bdr/_240_/t01435a4eb0bd6efd60.jpg"/>
+    <img class="imgBox_item" src="http://p1.so.qhimgs1.com/bdr/_240_/t015b7b61b7d7b6957d.jpg"/>
+    <img class="imgBox_item" src="http://p5.so.qhimgs1.com/bdr/_240_/t017e0d36aa4fbb419b.jpg"/>
+    <img class="imgBox_item" src="http://p0.so.qhimgs1.com/bdr/_240_/t0187b703add3536f20.jpg"/>
+    <img class="imgBox_item" src="http://p2.so.qhimgs1.com/bdr/_240_/t0113dc91902322c3ae.jpg"/>
+    <img class="imgBox_item" src="http://p2.so.qhimgs1.com/bdr/_240_/t01b6aba2da3d0fb5de.jpg"/>
+    <img class="imgBox_item" src="http://p3.so.qhimgs1.com/bdr/_240_/t01b3b707f7b292d023.jpg"/>
+    <img class="imgBox_item" src="http://p4.so.qhimgs1.com/bdr/_240_/t01b56d441e69b85004.jpg"/>
+    <img class="imgBox_preshow"/>
+</div>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.2.js"></script>
+<script>
+    $(function () {
+        var $imgBox = $("#imgBox");											// 图片容器
+        var $imgBoxItemlist = $imgBox.children(".imgBox_item");				// 图片集合
+        var $imgBoxPreshow = $imgBox.children(".imgBox_preshow").eq(0);		// 预览图片
+        var imgCount = $imgBoxItemlist.length;								// 图片数量
+        var dur = 9;														// 旋转一圈所需时间，单位s
+
+        /**
+         * 启动旋转木马
+         * 给每张图片添加一个animation动画，沿Y轴做3d旋转。
+         */
+        $imgBox.children(".imgBox_item").each(function (i, dom) {
+            var $this = $(this);
+            var animation = "xzmm " + dur + "s linear " + i * (dur / imgCount) + "s infinite forwards";	// animation效果
+            // 添加旋转效果
+            $this.css({
+                "z-index": imgCount - i,		// 让后面的图片显示在上面
+                "animation": animation
+            }).on("click", function () {		// 单击事件。单击图片时放大被单击的图片
+                var $this = $(this);
+                $imgBox.data("status", "paused");	// 标记旋转效果是被单击暂停的
+                $imgBoxItemlist.css({
+                    "opacity": 0,
+                    "pointer-events": "none"			// 穿透，防止点击到
+                });
+
+                // 在预览图片中显示并放大当前单击的图片
+                $imgBoxPreshow.attr({
+                    "src": $this.attr("src")
+                }).css({
+                    "transform": $this.css("transform"),
+                    "opacity": 1
+                });
+                setTimeout(function () {
+                    $imgBoxPreshow.css({
+                        "transition": "transform .5s linear",
+                        "transform": "scale(4)"
+                    });
+                }, 100);
+
+            }).on("mouseenter", function () {	// mouseenter事件。鼠标放在图片上时，暂停旋转
+                $(this).parent().children(".imgBox_item").removeClass("sel").css({
+                    "animation-play-state": "paused"
+                });
+                $(this).addClass("sel");
+            }).on("mouseleave", function () {	// mouseleave事件。鼠标移出图片时，如果暂停效果不是被单击暂停的，则继续旋转
+                if ($imgBox.data("status") != "paused") {	// 如果暂停效果不是被单击暂停的，则继续旋转
+                    $(this).parent().children(".imgBox_item").removeClass("sel").css({
+                        "animation-play-state": "running"
+                    });
+                }
+            });
+        });
+
+        /*
+         * 关闭预览图片，继续旋转木马
+         */
+        $imgBoxPreshow.on("click", function () {
+            var $this = $(this);
+            $this.attr("src", "").css({
+                "transform": "",
+                "opacity": 0
+            });
+            $imgBox.data("status", "running");
+            $imgBoxItemlist.removeClass("sel").css({
+                "animation-play-state": "running",
+                "opacity": 1,
+                "pointer-events": "auto"
+            });
+        });
+    })
+</script>
+</body>
+</html>
